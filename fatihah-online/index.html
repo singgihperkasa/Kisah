@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Surah Al-Fatihah Online</title>
+<style>
+body { font-family: sans-serif; background: #fafafa; text-align: center; padding: 20px; }
+.arabic { font-size: 32px; margin: 10px 0; color: #222; }
+.trans { font-size: 20px; margin-bottom: 20px; color: #444; }
+button { padding: 10px 25px; font-size: 18px; border: none; background: #28a745; color: white; border-radius: 8px; }
+audio { margin-top: 10px; width: 90%; }
+</style>
+</head>
+<body>
+<h1>🎧 Surah Al-Fatihah Online</h1>
+<div id="ayat"></div>
+<audio id="player" controls></audio>
+<br>
+<button onclick="mainkan()">▶️ Mainkan Berurutan</button>
+
+<script>
+let ayatData = [];
+let index = 0;
+
+async function ambilFatihah() {
+  const res = await fetch("https://api.quran.com/api/v4/quran/verses/uthmani?chapter_number=1");
+  const data = await res.json();
+  const transRes = await fetch("https://api.quran.com/api/v4/quran/translations/33?chapter_number=1"); // 33 = Indonesia (Kemenag)
+  const trans = await transRes.json();
+  ayatData = data.verses.map((v, i) => ({
+    arabic: v.text_uthmani,
+    trans: trans.translations[i].text,
+    audio: `https://verses.quran.com/${v.verse_key.replace(':', '/')}/ar.mishari_al_afasy.mp3`
+  }));
+}
+
+async function mainkan() {
+  if (!ayatData.length) await ambilFatihah();
+  putarAyat(0);
+}
+
+function putarAyat(i) {
+  if (i >= ayatData.length) return;
+  const {arabic, trans, audio} = ayatData[i];
+  document.getElementById("ayat").innerHTML = `
+    <div class="arabic">${arabic}</div>
+    <div class="trans">${trans}</div>
+  `;
+  const player = document.getElementById("player");
+  player.src = audio;
+  player.play();
+  player.onended = () => {
+    setTimeout(() => putarAyat(i + 1), 1000);
+  };
+}
+</script>
+</body>
+</html>
+
